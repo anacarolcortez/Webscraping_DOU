@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 
+
 driver = webdriver.Chrome('driver/chromedriver')
 wait = WebDriverWait(driver, 30)
 
@@ -59,11 +60,6 @@ def back_to_main_window():
     driver.implicitly_wait(3)
 
 
-def get_show_fee(text):
-    expences = re.search(r'', text)
-    return expences
-
-
 def get_contract_info(link):
     texto_completo = []
     new_window(link)
@@ -74,7 +70,6 @@ def get_contract_info(link):
     for texto in textos:
         texto_completo.append(texto.get_attribute("innerHTML"))
 
-    #valor = get_show_fee(texto_completo)
     back_to_main_window()
 
     return "".join(texto_completo)
@@ -122,8 +117,6 @@ def get_contracts_info_from_page():
 
         contracts_list.append(contract)
 
-    # print(contracts_list)
-
     return contracts_list
 
 
@@ -146,7 +139,6 @@ def get_all_contracts():
             for item in lista_pg:
                 contracts.append(item)
 
-    # print(contracts)
     return contracts
 
 
