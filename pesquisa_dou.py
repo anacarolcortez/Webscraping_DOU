@@ -6,15 +6,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
-import re
 
 driver = webdriver.Chrome('driver/chromedriver')
 wait = WebDriverWait(driver, 30)
 
 
-def open_browser(site):
+def open_browser(site, title):
     driver.get(site)
-    assert "Imprensa Nacional" in driver.title
+    assert title in driver.title
 
 
 def close_window():
@@ -60,6 +59,11 @@ def back_to_main_window():
     driver.implicitly_wait(3)
 
 
+def get_show_fee(text):
+    expences = re.search(r'', text)
+    return expences
+
+
 def get_contract_info(link):
     texto_completo = []
     new_window(link)
@@ -70,6 +74,7 @@ def get_contract_info(link):
     for texto in textos:
         texto_completo.append(texto.get_attribute("innerHTML"))
 
+    #valor = get_show_fee(texto_completo)
     back_to_main_window()
 
     return "".join(texto_completo)
@@ -159,7 +164,7 @@ def main():
 
     # Abrir site do Diário Oficial da União na página de pesquisa
     url_principal = "https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados"
-    open_browser(url_principal)
+    open_browser(url_principal, "Imprensa Nacional")
 
     # Pesquisar pela palavra-chave "show"
     search(div_imput, "show")
