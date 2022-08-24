@@ -124,7 +124,7 @@ def create_dataframe(dataframe):
 def passo_a_passo():
     try:
         abrir_navegador("https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados")
-        pesquisar_palavra_chave("aewfergsfdczsd", "Último mês", "Extrato de Contrato")
+        pesquisar_palavra_chave("show", "Último mês", "Extrato de Contrato")
         dados = coletar_informacoes_todas_paginas()
         create_dataframe(dados)
     except Exception as error:
