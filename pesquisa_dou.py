@@ -1,182 +1,121 @@
 # Documentação Selenium para Python: https://selenium-python.readthedocs.io/
+# Versão passo a passo, literal
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 
+# Configura opção de tela maximizada
+options = Options()
+options.add_argument("--start-maximized")
 
-driver = webdriver.Chrome('driver/chromedriver')
-wait = WebDriverWait(driver, 30)
+# Abre o navegador
+driver = webdriver.Chrome('driver/chromedriver', options=options)
+wait = WebDriverWait(driver, 20)
 
+def abrir_navegador(url):
+    driver.get(url)
 
-def open_browser(site, title):
-    driver.get(site)
-    assert title in driver.title
-
-
-def close_window():
-    driver.close()
-
-
-def search(xpath, word):
-    element = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-    element.send_keys(word)
-    element.send_keys(Keys.ENTER)
-
-
-def advanced_search(label):
-    link_pesquisa_avancada = "//a[@id='toggle-search-advanced']"
-    option_label = f"//label[contains(text(),'{label}')]//../input"
-    button_pesquisar = "//button[contains(text(), 'PESQUISAR')]"
-    click_element(link_pesquisa_avancada)
-    click_element(option_label)
-    click_element(button_pesquisar)
-
-
-def click_element(xpath):
-    element = wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
-    element.click()
-
-
-def get_total_pages():
-    last_page_btn = "//li[contains(@class, 'page-item')]/button"
-    elements = wait.until(
-        EC.presence_of_all_elements_located((By.XPATH, last_page_btn)))
-    return elements[-2].get_attribute("innerHTML")
-
-
-def new_window(link):
+def abrir_nova_aba(link):
     driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[1])
-    driver.get(link)
+    abrir_navegador(link)
 
-
-def back_to_main_window():
-    close_window()
+def fechar_aba():
+    driver.close()
     driver.switch_to.window(driver.window_handles[0])
-    driver.implicitly_wait(3)
 
+def pesquisar_palavra_chave(palavra, periodo, tipo_ato):
+    input_pesquisa = wait.until(EC.visibility_of_element_located((By.ID, 'search-bar')))
+    input_pesquisa.send_keys(palavra)
 
-def get_contract_info(link):
-    texto_completo = []
-    new_window(link)
+    link_pesquisa_avancada = wait.until(EC.element_to_be_clickable((By.ID, 'toggle-search-advanced')))
+    link_pesquisa_avancada.click()
 
-    textos = wait.until(
-        EC.presence_of_all_elements_located((By.CLASS_NAME, 'dou-paragraph')))
+    input_periodo = wait.until(EC.element_to_be_clickable((By.XPATH, f"//label[contains(text(), '{periodo}')]/../input")))
+    input_periodo.click()
 
-    for texto in textos:
-        texto_completo.append(texto.get_attribute("innerHTML"))
+    button_pesquisar = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'PESQUISAR')]")))
+    button_pesquisar.click()
 
-    back_to_main_window()
+    #incluir verificação se retornou resultados
+    combo_tipo_ato = wait.until(EC.element_to_be_clickable((By.ID, 'artTypeAction')))
+    combo_tipo_ato.click()
 
-    return "".join(texto_completo)
+    option_ato = wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{tipo_ato}')]")))
+    option_ato.click()
 
+def coletar_texto_contrato(link):
+    texto_contrato = []
+    abrir_nova_aba(link)
 
-def get_contracts_info_from_page():
-    contracts_list = []
+    lista_p = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "dou-paragraph")))
+    for p in lista_p:
+        texto_contrato.append(p.get_attribute("innerHTML"))
 
-    # Lista todos os resultados encontrados na página vigente
-    div_resultados = "//div[@class='resultado']"
-    resultados_list = wait.until(
-        EC.visibility_of_all_elements_located((By.XPATH, div_resultados)))
+    fechar_aba()
 
-    # Itera sobre cada resultado, para armazenar informações de cada contrato da página
-    for resultado in resultados_list:
-        contract = {}
+    return "".join(texto_contrato)
 
-        # Armazena informações dos órgãos contratantes
-        parent_contratantes = resultado.find_element(
-            By.TAG_NAME, "ol")
-        entidades_list = parent_contratantes.find_elements(
-            By.TAG_NAME, 'li')
-        contract.update(
-            {"UF": entidades_list[-3].get_attribute("innerHTML")})
-        contract.update(
-            {"cidade": entidades_list[-2].get_attribute("innerHTML")})
-        contract.update(
-            {"publicacao": entidades_list[-1].get_attribute("innerHTML")})
+def coletar_informacoes_contrato(resultado):
+    contrato = {}
 
-        # Armazena data da publicação
-        data = resultado.find_element(
-            By.CLASS_NAME, 'date-marker').get_attribute("innerHTML")
-        contract.update({"data_publicacao": data})
+    secao_dou = resultado.find_element(By.TAG_NAME, "ol")
+    itens_secao = secao_dou.find_elements(By.TAG_NAME, "li")
+    contrato.update({"publicacao": itens_secao[-1].get_attribute("innerHTML")})
+    contrato.update({"cidade": itens_secao[-2].get_attribute("innerHTML")})
+    contrato.update({"UF": itens_secao[-3].get_attribute("innerHTML")})
+    data = resultado.find_element(By.CLASS_NAME, "date-marker")
+    contrato.update({"data": data.get_attribute("innerHTML")})
 
-        # Armazena título e link da publicação
-        contrato = resultado.find_element(By.TAG_NAME, 'h5')
-        link_contrato = contrato.find_element(By.TAG_NAME, 'a')
-        href_contrato = link_contrato.get_attribute("href")
-        nome_contrato = link_contrato.get_attribute("innerHTML")
-        contract.update({"link": href_contrato})
-        contract.update({"titulo_publicacao": nome_contrato})
+    link_contrato = resultado.find_element(By.TAG_NAME, "a").get_attribute("href")
+    texto_contrato = coletar_texto_contrato(link_contrato)
+    contrato.update({"texto_contrato": texto_contrato})
 
-        texto_contrato = get_contract_info(href_contrato)
-        contract.update({"texto_contrato": texto_contrato})
+    return contrato
 
-        contracts_list.append(contract)
+def coletar_informacoes_pagina_inteira():
+    lista_contratos = []
+    lista_resultados = wait.until(EC.visibility_of_all_elements_located((By.XPATH, "//div[@class='resultado']")))
+    for resultado in lista_resultados:
+        lista_contratos.append(coletar_informacoes_contrato(resultado))
+    return lista_contratos
 
-    return contracts_list
+def numero_paginas():
+    xpath_btn = "//li[contains(@class, 'page-item')]/button"
+    lista_btn = wait.until(EC.presence_of_all_elements_located((By.XPATH, xpath_btn)))
+    btn_ultima_pg = lista_btn[-2].get_attribute("innerHTML")
+    return int(btn_ultima_pg)
 
+def coletar_informacoes_todas_paginas():
+    resultados_totais = []
+    pgs = numero_paginas()
 
-def get_all_contracts():
-    contracts = []
+    resultados_totais = coletar_informacoes_pagina_inteira()
 
-    total_pages = int(get_total_pages())
+    if pgs > 1:
+        for pagina in range(2, pgs+1):
+            xpath_btn_pg = f"//li[@id='{pagina}']/button"
+            wait.until(EC.presence_of_element_located((By.XPATH, xpath_btn_pg))).click()
+            resultado_pagina = coletar_informacoes_pagina_inteira()
+            for resultado in resultado_pagina:
+                resultados_totais.append(resultado)
 
-    # Pega todas as informações dos contratos da primeira página
-    lista_pg_1 = get_contracts_info_from_page()
-    for item in lista_pg_1:
-        contracts.append(item)
-
-    if total_pages > 1:
-        for i in range(2, total_pages+1):
-            btn_number_page = f"//li[@id='{i}']/button"
-            wait.until(
-                EC.visibility_of_element_located((By.XPATH, btn_number_page))).click()
-            lista_pg = get_contracts_info_from_page()
-            for item in lista_pg:
-                contracts.append(item)
-
-    return contracts
-
+    return resultados_totais
 
 def create_dataframe(dataframe):
     df = pd.DataFrame(dataframe)
-    df.to_csv(r'dados/dou_contratos_shows_doze_meses.csv',
+    df.to_csv(r'dados/dou_contratos_shows_mensal.csv',
               index=False, sep=";")
 
-
-def main():
-    # Elementos da página de pesquisa
-    div_imput = "//input[@id='search-bar']"
-    div_tipo_ato = "//div[@id='artType']"
-    link_extrato_contrato = "//a[contains(text(),'Extrato de Contrato')]"
-
-    # Abrir site do Diário Oficial da União na página de pesquisa
-    url_principal = "https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados"
-    open_browser(url_principal, "Imprensa Nacional")
-
-    # Pesquisar pela palavra-chave "show"
-    search(div_imput, "show")
-
-    # Filtrar consulta por período: últimos doze meses
-    advanced_search("Último ano")
-
-    # Filtrar pesquisa por Tipo de Ato: "Extrato de Contrato"
-    click_element(div_tipo_ato)
-    click_element(link_extrato_contrato)
-
-    # Armazenar informações de todos os contratos obtidos na pesquisa
-    dados = get_all_contracts()
-
-    # Cria dataframe com dados para análise posterior
+def passo_a_passo():
+    abrir_navegador("https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados")
+    pesquisar_palavra_chave("show", "Último mês", "Extrato de Contrato")
+    dados = coletar_informacoes_todas_paginas()
     create_dataframe(dados)
 
-    # Fechar o navegador
-    close_window()
-
-
-if __name__ == "__main__":
-    main()
+passo_a_passo()
