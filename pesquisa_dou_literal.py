@@ -20,6 +20,9 @@ wait = WebDriverWait(driver, 20)
 def abrir_navegador(url):
     driver.get(url)
 
+def fechar_aba():
+    driver.close()
+
 def abrir_nova_aba(link):
     driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[1])
@@ -126,5 +129,6 @@ def passo_a_passo():
         create_dataframe(dados)
     except Exception as error:
         print(error)
+    fechar_aba()
 
 passo_a_passo()
