@@ -1,6 +1,5 @@
 # Documentação Selenium para Python: https://selenium-python.readthedocs.io/
 # Versão passo a passo, literal
-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -19,9 +18,6 @@ wait = WebDriverWait(driver, 20)
 
 def abrir_navegador(url):
     driver.get(url)
-
-def fechar_aba():
-    driver.close()
 
 def abrir_nova_aba(link):
     driver.execute_script("window.open('');")
@@ -129,6 +125,6 @@ def passo_a_passo():
         create_dataframe(dados)
     except Exception as error:
         print(error)
-    fechar_aba()
+    driver.close()
 
 passo_a_passo()
