@@ -42,12 +42,15 @@ def pesquisar_palavra_chave(palavra, periodo, tipo_ato):
     button_pesquisar = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'PESQUISAR')]")))
     button_pesquisar.click()
 
-    #incluir verificação se retornou resultados
-    combo_tipo_ato = wait.until(EC.element_to_be_clickable((By.ID, 'artTypeAction')))
-    combo_tipo_ato.click()
+    if "0 resultados para" not in driver.page_source:
+        combo_tipo_ato = wait.until(EC.element_to_be_clickable((By.ID, 'artTypeAction')))
+        combo_tipo_ato.click()
 
-    option_ato = wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{tipo_ato}')]")))
-    option_ato.click()
+        option_ato = wait.until(EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{tipo_ato}')]")))
+        option_ato.click()
+    else:
+        raise Exception("A consulta não retornou resultados")
+
 
 def coletar_texto_contrato(link):
     texto_contrato = []
@@ -105,6 +108,9 @@ def coletar_informacoes_todas_paginas():
             for resultado in resultado_pagina:
                 resultados_totais.append(resultado)
 
+
+    print(resultados_totais)
+    print(len(resultados_totais))
     return resultados_totais
 
 def create_dataframe(dataframe):
@@ -113,9 +119,12 @@ def create_dataframe(dataframe):
               index=False, sep=";")
 
 def passo_a_passo():
-    abrir_navegador("https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados")
-    pesquisar_palavra_chave("show", "Último mês", "Extrato de Contrato")
-    dados = coletar_informacoes_todas_paginas()
-    create_dataframe(dados)
+    try:
+        abrir_navegador("https://www.in.gov.br/acesso-a-informacao/dados-abertos/base-de-dados")
+        pesquisar_palavra_chave("aewfergsfdczsd", "Último mês", "Extrato de Contrato")
+        dados = coletar_informacoes_todas_paginas()
+        create_dataframe(dados)
+    except Exception as error:
+        print(error)
 
 passo_a_passo()
