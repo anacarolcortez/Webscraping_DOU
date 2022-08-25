@@ -50,7 +50,6 @@ def pesquisar_palavra_chave(palavra, periodo, tipo_ato):
     else:
         raise Exception("A consulta não retornou resultados")
 
-
 def coletar_texto_contrato(link):
     texto_contrato = []
     abrir_nova_aba(link)
@@ -107,9 +106,6 @@ def coletar_informacoes_todas_paginas():
             for resultado in resultado_pagina:
                 resultados_totais.append(resultado)
 
-
-    print(resultados_totais)
-    print(len(resultados_totais))
     return resultados_totais
 
 def create_dataframe(dataframe):
