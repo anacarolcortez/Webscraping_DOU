@@ -1,5 +1,11 @@
 # Documentação Selenium para Python: https://selenium-python.readthedocs.io/
 # Versão passo a passo, literal
+
+# OBS: O curso é voltado para jornalistas, então o foco aqui não foi escrever um código seguindo design patterns. 
+# O core da programação, para o jornalista, é a coleta e análise de dados, matéria-prima para a informação.
+# Se você quiser conhecer o padrão Page Object, muito utilizado em automação, e BDD, muito utilizado por QAs, segue um repositório exemplo:
+# https://github.com/anacarolcortez/SeleniumJavaCucumber
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
