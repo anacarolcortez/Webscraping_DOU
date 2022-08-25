@@ -11,6 +11,7 @@ import pandas as pd
 # Configura opção de tela maximizada
 options = Options()
 options.add_argument("--start-maximized")
+options.add_argument('--headless') #opção de rodar o Selenium em segundo plano
 
 # Abre o navegador
 driver = webdriver.Chrome('driver/chromedriver', options=options)
